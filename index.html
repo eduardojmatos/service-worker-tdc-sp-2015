@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>Service Workers e o futuro das aplicações no seu browser</title>
+
+    <meta name="description" content="Estratégias de cache das aplicações web hoje, são extremamente complicadas e impossíveis de se controlar via programação. ServiceWorkers, além de resolver esse problema, chega com features novas como interceptação de requests, sincronização em background e Push API">
+    <meta name="author" content="Eduardo Matos">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link rel="stylesheet" href="css/reveal.min.css">
+    <link rel="stylesheet" href="css/theme/moon.css" id="theme">
+    <link rel="stylesheet" href="css/personalized.css">
+    <link rel="stylesheet" href="css/highlight/github.css">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- If the query includes 'print-pdf', include the PDF print sheet -->
+    <script>
+      if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+      }
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+
+        <section>
+          <h1>ServiceWorkers</h1>
+          <h3>e o futuro das aplicações no seu browser</h3>
+        </section>
+
+        <section data-background="#fff">
+          <a class="image" href="https://www.twitter.com/eduardojmatos" target="_blank">
+            <img src="img/profile_img.jpg" />
+          </a>
+          <h3>Eduardo Matos</h3>
+          <p>
+            <a href="https://www.twitter.com/eduardojmatos" target="_blank">@eduardojmatos</a>
+          </p>
+        </section>
+
+				<section data-background="#fff">
+          <div class="col col50 text-right">
+            <img src="img/logo.png" class="no-border no-shadow" />
+          </div>
+          <div class="col col50 text-left">
+            <h4 class="subtext">Soluções de comunicação que aproximam médicos e pacientes</h4>
+          </div>
+				</section>
+
+        <section data-background="img/workers.jpg">
+          <h1 class="text-shadow">O que é um worker?</h1>
+        </section>
+
+        <section>
+          <p>
+            Primeira definição de Worker surgiu com o WebWorkers
+            <a href="http://www.html5rocks.com/en/tutorials/workers/basics/" class="fragment roll-in">http://www.html5rocks.com/en/tutorials/workers/basics/</a>
+          </p>
+        </section>
+
+        <section>
+          <h2>Browser executando tarefas sem bloquear a interface</h2>
+          <p>
+            Resumindo: scripts rodando em paralelo à pagina
+          </p>
+          <p>
+            EX: tarefas que exigem alto processamento
+          </p>
+        </section>
+
+        <section data-background="#fff">
+          <pre class="no-border no-shadow">
+            <code data-trim contenteditable class="javascript hljs">
+// main script
+var worker = new Worker('worker.js');
+
+worker.addEventListener('message', function(e) {
+  console.log('Worker diz: ', e.data);
+}, false);
+
+worker.postMessage('Oi, eu sou o Worker!');
+
+// worker.js
+self.addEventListener('message', function(e) {
+  self.postMessage(e.data);
+}, false);
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <img src="img/webworker_caniuse.png" />
+        </section>
+
+        <section>
+          <h1>Regras comuns de um Worker</h1>
+          <ul>
+            <li class="fragment">Não acessa o DOM</li>
+            <li class="fragment">Não acessa o <code>window</code></li>
+            <li class="fragment">Não acessa o <code>document</code></li>
+            <li class="fragment">Acessa o <code>navigator</code></li>
+            <li class="fragment">Acessa o <code>location (ready-only)</code></li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>E o ServiceWorkers?</h2>
+        </section>
+
+        <section>
+          <ul>
+            <li>
+              Usa o mesmo conceito do WebWorker de isolar execução de um script
+            </li>
+            <li class="fragment">
+              Controla programaticamente o cache da sua aplicação
+            </li>
+            <li class="fragment">
+              Serve como um proxy
+            </li>
+            <li class="fragment">
+              BackgroundSync (!)
+            </li>
+            <li class="fragment">
+              [breve] Push Notifications (!!)
+            </li>
+            <li class="fragment">
+              [futuramente] Geofencing (!!!)
+            </li>
+            <li class="fragment">
+              [futuramente] Bluetooth (!!!!)
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <img src="img/service_workers_spec.png" />
+        </section>
+
+        <section>
+          <h1>Offline control</h1>
+        </section>
+
+        <section data-background="img/T-Rex-Is-Unable-To-Connect-With-The-Internet-On-a-Personal-Level.jpg">
+        </section>
+
+        <section data-background="#fff">
+          <img src="img/captain_planet.jpg" />
+          <h3 class="fragment">Vai Application Cache!</h3>
+        </section>
+
+        <section>
+          <p>
+            A forma de cachear arquivos parecia simples...
+          </p>
+          <a href="http://diveintohtml5.info/offline.html">http://diveintohtml5.info/offline.html</a>
+        </section>
+
+        <section data-background="#fff">
+          <pre class="no-border no-shadow">
+            <code data-trim contenteditable class="xml hljs">
+< html manifest="offline.appcache">
+            </code>
+          </pre>
+        </section>
+
+        <section data-background="#fff">
+          <pre class="no-border no-shadow">
+            <code data-trim contenteditable class="html hljs">
+CACHE MANIFEST
+assets/6/script/mainmin.js
+assets/6/style/mainmin.css
+assets/6/style/fonts/pro.ttf
+assets/6/style/imgs/sprites1.png
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <img src="img/noooo.gif" />
+          <h3>AppCache is a douchebag!</h3>
+          <a href="http://alistapart.com/article/application-cache-is-a-douchebag">http://alistapart.com/article/application-cache-is-a-douchebag</a>
+          <a href="http://sergiolopes.org/palestra-appcache-html5-offline/#slide-capa">http://sergiolopes.org/palestra-appcache-html5-offline</a>
+          <a href="http://eduardomatos.me/appcache-manifest-e-serviceworker-as-partes-boas-e-ruins">http://eduardomatos.me/appcache-manifest-e-serviceworker-as-partes-boas-e-ruins</a>
+        </section>
+
+        <section>
+          <ul>
+            <li>Os arquivos sempre virão do ApplicationCache mesmo se você estiver online</li>
+            <li class="fragment">O AppCache só atualiza o conteúdo do manifesto se ele mesmo for atualizado</li>
+            <li class="fragment">Se você colocar a URL no manifesto ele nunca mais vai ser atualizado</li>
+            <li class="fragment">Se eu não definir um fallback de NETWORK nada que está fora do manifesto é carregado</li>
+            <li class="fragment">Ele cacheia a página que contém o manifesto mesmo que eu não queira</li>
+            <li class="fragment">Se houver algum item listado que não foi encontrado (404, 500), o cache todo é descartado</li>
+          </ul>
+        </section>
+
+        <section>
+          <h1>E como ServiceWorker melhora isso?</h1>
+        </section>
+
+        <section>
+          <pre class="no-border no-shadow">
+            <code data-trim contenteditable class="javascript hljs">
+https://meu.server.com/data/posts.json
+https://meu.server.com/assets/application.css
+https://meu.server.com/assets/application.js
+https://meu.server.com/assets/image.jpeg
+            </code>
+          </pre>
+        </section>
+
+        <section data-background="#fff">
+          <pre class="no-border no-shadow">
+            <code data-trim contenteditable class="javascript hljs">
+// main script
+navigator.serviceWorker.register("/js/sw_cache.js").then(
+  function ( serviceWorker ) {
+      console.log("ServiceWorkers instalado com sucesso.");
+  },
+  function ( error ) {
+      console.error("Ops.. não rolou a instalação do ServiceWorkers", error);
+  });
+            </code>
+          </pre>
+        </section>
+
+        <section data-background="#fff">
+          <p>
+            Cacheando seus assets
+          </p>
+          <pre class="no-border no-shadow">
+            <code data-trim contenteditable style="min-height: 550px" class="javascript hljs">
+// assets/sw_cache.js
+self.addEventListener('install', function(event) {
+  var urlsToPrefetch = [
+    'https://www.chromium.org/_/rsrc/1302286216006/config/customLogo.gif'
+  ];
+  event.waitUntil(
+    caches.open(CURRENT_CACHES['prefetch']).then(function(cache) {
+      return cache.addAll(urlsToPrefetch.map(function(urlToPrefetch) {
+          return new Request(urlToPrefetch, {mode: 'no-cors'});
+        })
+      ).then(function() {
+        console.log('All resources fetched and cached.');
+      });
+    }).catch(function(error) {
+      console.error('Pre-fetching failed:', error);
+    })
+
+  );
+})
+            </code>
+          </pre>
+        </section>
+
+        <section>
+          <a href="https://github.com/GoogleChrome/samples/tree/gh-pages/service-worker">https://github.com/GoogleChrome/samples/tree/gh-pages/service-worker</a>
+        </section>
+
+        <section>
+          <img src="img/53270254.jpg" />
+        </section>
+
+        <section>
+          <img src="img/sw_graphic_01.png" />
+        </section>
+
+        <section>
+
+          <section data-background="#fff">
+            <p>
+              Interceptando requests
+            </p>
+            <pre class="no-border no-shadow">
+              <code data-trim contenteditable style="min-height: 500px" class="javascript hljs">
+// assets/service-worker.js
+var base = "https://meu.server.com";
+
+var data_url = new URL("/data/posts.json", base) + "";
+
+self.addEventListener("fetch", function(e) {
+  var url = e.request.url;
+  console.log(url);
+  if (url == data_url) {
+    e.respondWith(
+      new Response(JSON.stringify({
+        posts: { /* ... */ }
+      }), {
+        headers: { 'Content-Type': 'application/json' },
+        status: 200
+      })
+    );
+  }
+});
+              </code>
+            </pre>
+          </section>
+
+        </section>
+
+        <section data-background="#fff">
+          <p>
+            Request + Cache
+          </p>
+          <pre class="no-border no-shadow">
+            <code data-trim contenteditable style="min-height: 550px; font-size: 1.1em;" class="javascript hljs">
+// assets/worker.js
+self.version = 2;
+
+var base = "https://meu.server.com"
+var data_url = new URL("/data/posts.json", base) + "";
+
+self.addEventListener("fetch",
+    function ( e ) {
+        if (e.request.url == data_url) {
+          e.respondWith(
+            caches.match( e.request )
+                .catch( function () {
+                    return e.default;
+                })
+                .catch( function () {
+                    return caches.match("/data/posts_fallback.json");
+                })
+          );
+        }
+    }
+);
+            </code>
+          </pre>
+        </section>
+
+        <section>
+
+          <section>
+            <img src="img/sw_graphic_02.png" />
+          </section>
+
+          <section>
+            <img src="img/sw_graphic_03.png" />
+          </section>
+
+        </section>
+
+        <section>
+          <h1>Exemplo de ServiceWorkers</h1>
+          <a href="https://jakearchibald.github.io/trained-to-thrill/">https://jakearchibald.github.io/trained-to-thrill/</a>
+        </section>
+
+        <section>
+          <h1>E a segurança disso?</h1>
+
+          <ul class="fragment">
+            <li>
+              Funciona apenas com https
+            </li>
+            <li>
+              Escopo por domains
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h1>BACKGROUND SYNC</h1>
+          <p>
+            Ainda muito recente
+          </p>
+        </section>
+
+        <section>
+
+          <section data-background="#fff">
+            <pre class="no-border no-shadow">
+              <code data-trim contenteditable style="min-height: 650px" class="javascript hljs">
+navigator.serviceWorker.ready.then(function (sw) {
+  // Returns a Promise
+  navigator.sync.register(
+    "my_data_sync",
+    {
+      minInterval: 86400 * 1000,       // ms, default: heuristic
+      repeating: true,                 // default: false
+      data: '',                        // default: empty string
+      description: '',                 // default: empty string
+      lang: '',                        // default: document lang
+      dir: ''                          // default: document dir
+    }
+  ).then(function() { // Success
+       // No resolved value
+       // Success, sync is now registered
+     },
+     function() { // Failure
+       // If no SW registration
+       // User/UA denied permission
+       // Sync id already registered
+     });
+});
+              </code>
+            </pre>
+          </section>
+
+          <section data-background="#fff">
+            <pre class="no-border no-shadow">
+              <code data-trim contenteditable class="javascript hljs">
+// assets/service-worker.js
+  self.onsync = function(event) {
+    var data = JSON.parse(event.data);
+
+    if (event.id === "my_data_sync") {
+      if (data.whatever === "foo") {
+        // rejection is indication that the UA should try
+        // later (especially when network is ok)
+        event.waitUntil(doAsyncStuff());
+      }
+    } else {
+      // Garbage collect unknown syncs (perhaps from older pages).
+      navigator.sync.unregister(event.id);
+    }
+  };
+              </code>
+            </pre>
+
+          </section>
+
+        </section>
+
+        <section>
+          <h1>Geofencing</h1>
+          <p>
+            Nem a spec foi definida.
+          </p>
+        </section>
+
+        <section>
+          <h1>Bluetooth</h1>
+          <p>
+            Spec ainda engatinhando
+          </p>
+          <a href="https://github.com/WebBluetoothCG/web-bluetooth">https://github.com/WebBluetoothCG/web-bluetooth</a>
+          <a href="http://www.w3.org/community/web-bluetooth/">http://www.w3.org/community/web-bluetooth</a>
+        </section>
+
+        <section data-background="#102a48">
+          <h1>Onde funciona?</h1>
+          <a href="https://jakearchibald.github.io/isserviceworkerready/">https://jakearchibald.github.io/isserviceworkerready/</a>
+          <img src="img/sw_isready.png" class="no-border" />
+        </section>
+
+        <section>
+          <h1>Porque esse hype todo?</h1>
+
+          <ul>
+            <li class="fragment">JavaScript chegando no app nativo</li>
+            <li class="fragment">Evolução e maior controle das aplicações</li>
+            <li class="fragment">Acesso a funcionalidades do sistema do usuário (bluetooth, push notifications...)</li>
+          </ul>
+        </section>
+
+        <section data-background="#fff">
+          <img src="img/thanks.gif" />
+          <h1>Obrigado!</h1>
+
+          <p>
+            link da palestra: JÁ JÁ =D
+          </p>
+
+          <p>
+            meu twitter: <a href="https://www.twitter.com/eduardojmatos">@eduardojmatos</a>
+          </p>
+
+          <p>
+            fontes:
+            <a href="http://bit.ly/serviceworkers-links">http://bit.ly/serviceworkers-links</a>
+          </p>
+        </section>
+
+      </div>
+
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.min.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: false,
+        history: true,
+        center: true,
+        slideNumber: false,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+        // Parallax scrolling
+        // parallaxBackgroundImage: 'img/reveal-parallax-1.jpg',
+        // parallaxBackgroundSize: '2100px 900px',
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+          { src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+
+  </body>
+</html>
